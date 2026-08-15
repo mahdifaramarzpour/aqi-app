@@ -8,18 +8,20 @@ from datetime import datetime
 
 
 # =========================================================
-# تنظیمات صفحه
+# PAGE CONFIG
 # =========================================================
+
 st.set_page_config(
     page_title="AQI Predictor",
-    layout="wide",
-    page_icon="🌫️"
+    page_icon="🌫️",
+    layout="wide"
 )
 
 
 # =========================================================
-# بارگذاری مدل
+# LOAD MODEL
 # =========================================================
+
 @st.cache_resource
 def load_model():
     return joblib.load("xgboost.pkl")
@@ -28,99 +30,110 @@ def load_model():
 try:
     model = load_model()
 except Exception as e:
-    st.error("❌ خطا در بارگذاری مدل xgboost.pkl")
+    st.error("❌ خطا در بارگذاری فایل مدل xgboost.pkl")
     st.exception(e)
     st.stop()
 
 
 # =========================================================
-# بررسی featureهای مدل
+# MODEL FEATURES
 # =========================================================
+
 if not hasattr(model, "feature_names_in_"):
     st.error(
-        "❌ مدل ذخیره‌شده feature_names_in_ ندارد. "
-        "مدل باید با DataFrame آموزش داده شده باشد."
+        "❌ مدل ذخیره‌شده فاقد feature_names_in_ است."
     )
     st.stop()
+
 
 MODEL_FEATURES = list(model.feature_names_in_)
 
 
+# بررسی featureهای تکراری مدل
+duplicate_features = list(
+    pd.Series(MODEL_FEATURES)[
+        pd.Series(MODEL_FEATURES).duplicated()
+    ]
+)
+
+
 # =========================================================
-# دیتاست hard-coded
+# HARD CODED DATA
 # =========================================================
+
 HARDCODED_DATA = [
     {
-        'pm2_5': 14.558333,
-        'pm10': 24.816667,
-        'co': 466.333333,
-        'no2': 60.270833,
-        'so2': 5.0,
-        'o3': 68.541667,
-        'dust': 12.583333,
-        'uv_index': 2.427083,
-        'aqi_today': 46.5,
-        'aqi_yesterday': 47.0,
-        'aqi_2days_ago': 46.152778
+        "pm2_5": 14.558333,
+        "pm10": 24.816667,
+        "co": 466.333333,
+        "no2": 60.270833,
+        "so2": 5.0,
+        "o3": 68.541667,
+        "dust": 12.583333,
+        "uv_index": 2.427083,
+        "aqi_today": 46.5,
+        "aqi_yesterday": 47.0,
+        "aqi_2days_ago": 46.152778
     },
     {
-        'pm2_5': 16.245833,
-        'pm10': 25.7125,
-        'co': 722.541667,
-        'no2': 77.1625,
-        'so2': 5.0,
-        'o3': 67.5,
-        'dust': 7.791667,
-        'uv_index': 2.504167,
-        'aqi_today': 54.791667,
-        'aqi_yesterday': 46.5,
-        'aqi_2days_ago': 46.597222
+        "pm2_5": 16.245833,
+        "pm10": 25.7125,
+        "co": 722.541667,
+        "no2": 77.1625,
+        "so2": 5.0,
+        "o3": 67.5,
+        "dust": 7.791667,
+        "uv_index": 2.504167,
+        "aqi_today": 54.791667,
+        "aqi_yesterday": 46.5,
+        "aqi_2days_ago": 46.597222
     },
     {
-        'pm2_5': 19.391667,
-        'pm10': 29.658333,
-        'co': 822.458333,
-        'no2': 76.083333,
-        'so2': 5.0,
-        'o3': 74.583333,
-        'dust': 6.125,
-        'uv_index': 2.410417,
-        'aqi_today': 58.208333,
-        'aqi_yesterday': 54.791667,
-        'aqi_2days_ago': 49.430556
+        "pm2_5": 19.391667,
+        "pm10": 29.658333,
+        "co": 822.458333,
+        "no2": 76.083333,
+        "so2": 5.0,
+        "o3": 74.583333,
+        "dust": 6.125,
+        "uv_index": 2.410417,
+        "aqi_today": 58.208333,
+        "aqi_yesterday": 54.791667,
+        "aqi_2days_ago": 49.430556
     },
     {
-        'pm2_5': 64.670833,
-        'pm10': 94.8125,
-        'co': 3333.833333,
-        'no2': 400.570833,
-        'so2': 5.0,
-        'o3': 9.5,
-        'dust': 5.125,
-        'uv_index': 0.389583,
-        'aqi_today': 111.25,
-        'aqi_yesterday': 95.541667,
-        'aqi_2days_ago': 85.638889
+        "pm2_5": 64.670833,
+        "pm10": 94.8125,
+        "co": 3333.833333,
+        "no2": 400.570833,
+        "so2": 5.0,
+        "o3": 9.5,
+        "dust": 5.125,
+        "uv_index": 0.389583,
+        "aqi_today": 111.25,
+        "aqi_yesterday": 95.541667,
+        "aqi_2days_ago": 85.638889
     },
     {
-        'pm2_5': 18.4375,
-        'pm10': 18.833333,
-        'co': 2691.583333,
-        'no2': 43.754167,
-        'so2': 5.0,
-        'o3': 24.291667,
-        'dust': 0.333333,
-        'uv_index': 0.50625,
-        'aqi_today': 27.583333,
-        'aqi_yesterday': 66.875,
-        'aqi_2days_ago': 72.333333
+        "pm2_5": 18.4375,
+        "pm10": 18.833333,
+        "co": 2691.583333,
+        "no2": 43.754167,
+        "so2": 5.0,
+        "o3": 24.291667,
+        "dust": 0.333333,
+        "uv_index": 0.50625,
+        "aqi_today": 27.583333,
+        "aqi_yesterday": 66.875,
+        "aqi_2days_ago": 72.333333
     }
 ]
 
 
 # =========================================================
-# Feature Engineering
+# FEATURE ENGINEERING
 # =========================================================
+
 def compute_features(
     pm2_5,
     pm10,
@@ -136,10 +149,20 @@ def compute_features(
 ):
 
     particle_pollution = pm10 + dust + 0.2
-    gas_pollution = o3 + no2 + so2 + co
+
+    gas_pollution = (
+        o3
+        + no2
+        + so2
+        + co
+    )
+
     co_dot_no2 = co * no2
 
-    trend = aqi_today - aqi_yesterday
+    trend = (
+        aqi_today
+        - aqi_yesterday
+    )
 
     ma3 = (
         aqi_today
@@ -148,31 +171,44 @@ def compute_features(
     ) / 3
 
     return {
-        'pm2_5': pm2_5,
-        'pm10': pm10,
-        'european_aqi': aqi_today,
-        'particle_pollution': particle_pollution,
-        'gas_pollution': gas_pollution,
-        'carbon_monoxide': co,
-        'uv_index': uv_index,
-        'ozone': o3,
-        'nitrogen_dioxide': no2,
-        'dust': dust,
-        'lag1': aqi_yesterday,
-        'co dot no2': co_dot_no2,
-        'trend': trend,
-        'ma3': ma3
+        "pm2_5": pm2_5,
+        "pm10": pm10,
+        "european_aqi": aqi_today,
+        "particle_pollution": particle_pollution,
+        "gas_pollution": gas_pollution,
+        "carbon_monoxide": co,
+        "uv_index": uv_index,
+        "ozone": o3,
+        "nitrogen_dioxide": no2,
+        "dust": dust,
+        "lag1": aqi_yesterday,
+        "co dot no2": co_dot_no2,
+        "trend": trend,
+        "ma3": ma3
     }
 
 
 # =========================================================
-# تابع پیش‌بینی
+# PREDICTION FUNCTION
 # =========================================================
+
 def make_prediction(features):
 
-    # -----------------------------------------
-    # بررسی featureهای مورد نیاز مدل
-    # -----------------------------------------
+    # -----------------------------
+    # Check duplicate model features
+    # -----------------------------
+
+    if duplicate_features:
+
+        raise ValueError(
+            "مدل دارای featureهای تکراری است: "
+            + str(duplicate_features)
+        )
+
+    # -----------------------------
+    # Check missing features
+    # -----------------------------
+
     missing_features = [
         feature
         for feature in MODEL_FEATURES
@@ -180,130 +216,130 @@ def make_prediction(features):
     ]
 
     if missing_features:
+
         raise ValueError(
-            f"Featureهای زیر در ورودی وجود ندارند: "
-            f"{missing_features}"
+            "Featureهای زیر در ورودی وجود ندارند:\n"
+            + str(missing_features)
         )
 
-    # -----------------------------------------
-    # ساخت ورودی با همان ترتیب زمان آموزش مدل
-    # -----------------------------------------
+    # -----------------------------
+    # Create input
+    # -----------------------------
+
     input_values = [
         features[feature]
         for feature in MODEL_FEATURES
     ]
 
-    # -----------------------------------------
-    # تبدیل به NumPy
-    #
-    # این قسمت برای جلوگیری از DuplicateError
-    # در sklearn / narwhals استفاده شده است.
-    # -----------------------------------------
     X_input = np.asarray(
         [input_values],
         dtype=np.float64
     )
 
-    # -----------------------------------------
-    # بررسی تعداد featureها
-    # -----------------------------------------
+    # -----------------------------
+    # Check shape
+    # -----------------------------
+
     if X_input.shape[1] != len(MODEL_FEATURES):
+
         raise ValueError(
-            f"تعداد featureهای ورودی ({X_input.shape[1]}) "
-            f"با تعداد featureهای مدل ({len(MODEL_FEATURES)}) "
-            f"برابر نیست."
+            f"تعداد featureهای ورودی "
+            f"{X_input.shape[1]} است، "
+            f"اما مدل {len(MODEL_FEATURES)} feature انتظار دارد."
         )
 
-    # -----------------------------------------
-    # prediction
-    # -----------------------------------------
+    # -----------------------------
+    # Prediction
+    # -----------------------------
+
     prediction = model.predict(X_input)
 
     return float(prediction[0])
 
 
 # =========================================================
-# توصیه‌ها
+# AQI ADVICE
 # =========================================================
+
 advice_map = {
-    "خوب": (
-        "هوای عالی برای پیاده‌روی! "
-        "از فضای باز لذت ببرید. 🏃‍♂️"
-    ),
 
-    "متوسط": (
-        "کیفیت هوا قابل قبول است، "
-        "اما افراد بسیار حساس احتیاط کنند. 😷"
-    ),
+    "خوب":
+        "هوای عالی برای پیاده‌روی! از فضای باز لذت ببرید. 🏃‍♂️",
 
-    "ناسالم برای حساس‌ها": (
-        "غلظت آلاینده‌ها کمی بالاست، "
-        "حتماً ماسک بزنید. 😷"
-    ),
+    "متوسط":
+        "کیفیت هوا قابل قبول است، اما افراد بسیار حساس احتیاط کنند. 😷",
 
-    "ناسالم": (
-        "هوا ناسالم است! "
-        "از تردد غیرضروری خودداری کنید. 🛑"
-    ),
+    "ناسالم برای حساس‌ها":
+        "غلظت آلاینده‌ها کمی بالاست، افراد حساس کمتر در فضای باز بمانند. 😷",
 
-    "بسیار ناسالم": (
-        "وضعیت بحرانی است! "
-        "اکیداً از خانه خارج نشوید. ⛔"
-    )
+    "ناسالم":
+        "هوا ناسالم است! از تردد غیرضروری و فعالیت سنگین خودداری کنید. 🛑",
+
+    "بسیار ناسالم":
+        "وضعیت بحرانی است! فعالیت در فضای باز را محدود کنید. ⛔"
 }
 
 
 # =========================================================
-# مقداردهی اولیه Session State
+# SESSION STATE
 # =========================================================
+
 defaults = {
-    'pm2_5': 20.0,
-    'pm10': 30.0,
-    'co': 300.0,
-    'no2': 40.0,
-    'so2': 10.0,
-    'o3': 50.0,
-    'dust': 5.0,
-    'uv_index': 1.5,
-    'aqi_today': 50.0,
-    'aqi_yesterday': 48.0,
-    'aqi_2days_ago': 45.0
+
+    "pm2_5": 20.0,
+    "pm10": 30.0,
+    "co": 300.0,
+    "no2": 40.0,
+    "so2": 10.0,
+    "o3": 50.0,
+    "dust": 5.0,
+    "uv_index": 1.5,
+
+    "aqi_today": 50.0,
+    "aqi_yesterday": 48.0,
+    "aqi_2days_ago": 45.0
 }
 
-for key, val in defaults.items():
+
+for key, value in defaults.items():
+
     if key not in st.session_state:
-        st.session_state[key] = val
+
+        st.session_state[key] = value
 
 
 # =========================================================
-# تاریخچه
+# HISTORY
 # =========================================================
-if 'history' not in st.session_state:
+
+if "history" not in st.session_state:
 
     st.session_state.history = pd.DataFrame(
         columns=[
-            'زمان',
-            'PM2.5',
-            'PM10',
-            'CO',
-            'NO2',
-            'SO2',
-            'O3',
-            'Dust',
-            'UV Index',
-            'AQI امروز',
-            'AQI دیروز',
-            'AQI دو روز پیش',
-            'پیش‌بینی AQI',
-            'وضعیت'
+            "زمان",
+            "PM2.5",
+            "PM10",
+            "CO",
+            "NO2",
+            "SO2",
+            "O3",
+            "Dust",
+            "UV Index",
+            "AQI امروز",
+            "AQI دیروز",
+            "AQI دو روز پیش",
+            "پیش‌بینی AQI",
+            "وضعیت"
         ]
     )
 
 
 # =========================================================
-# Modal
+# MODAL
 # =========================================================
-if 'show_modal' not in st.session_state:
+
+if "show_modal" not in st.session_state:
+
     st.session_state.show_modal = True
 
 
@@ -314,29 +350,29 @@ if st.session_state.show_modal:
         use_container_width=True
     ):
 
-        st.markdown("""
-        ### ℹ️ درباره سامانه پیش‌بینی
+        st.markdown(
+            """
+            ### ℹ️ درباره سامانه پیش‌بینی
 
-        🤖 **این سیستم با استفاده از مدل XGBoost و
-        داده‌های آلایندگی روزهای گذشته، شاخص کیفیت هوا
-        (AQI) را برای فردا پیش‌بینی می‌کند.**
+            🤖 **این سیستم با استفاده از مدل XGBoost
+            و داده‌های آلایندگی روزهای گذشته،
+            شاخص کیفیت هوا (AQI) را برای فردا
+            پیش‌بینی می‌کند.**
 
-        شما می‌توانید مقادیر را به صورت دستی وارد کنید
-        یا با دکمه **«انتخاب تصادفی»** یک نمونه واقعی
-        از داده‌های تاریخی را امتحان کنید.
+            شما می‌توانید مقادیر را به صورت دستی
+            وارد کنید یا با دکمه **«انتخاب تصادفی»**
+            یک نمونه واقعی از داده‌های تاریخی را امتحان کنید.
 
-        پس از پیش‌بینی، توصیه متناسب با وضعیت هوا نمایش
-        داده می‌شود.
+            ---
 
-        ---
+            ### 📊 عملکرد مدل روی داده‌های تست
 
-        ### 📊 عملکرد مدل روی داده‌های تست
-
-        | معیار | مقدار |
-        |---|---:|
-        | **MAE** | **3.571** |
-        | **RMSE** | **4.719** |
-        """)
+            | معیار | مقدار |
+            |---|---:|
+            | MAE | 3.571 |
+            | RMSE | 4.719 |
+            """
+        )
 
         if st.button(
             "✓ متوجه شدم",
@@ -344,32 +380,42 @@ if st.session_state.show_modal:
         ):
 
             st.session_state.show_modal = False
+
             st.rerun()
 
 
 # =========================================================
-# Random selection
+# RANDOM DATA
 # =========================================================
-if 'random_trigger' not in st.session_state:
+
+if "random_trigger" not in st.session_state:
+
     st.session_state.random_trigger = False
 
 
 if st.session_state.random_trigger:
 
-    rand = random.choice(HARDCODED_DATA)
+    random_data = random.choice(
+        HARDCODED_DATA
+    )
 
-    for key, value in rand.items():
+    for key, value in random_data.items():
+
         st.session_state[key] = value
 
     st.session_state.random_trigger = False
 
 
 # =========================================================
-# عنوان
+# TITLE
 # =========================================================
+
 st.markdown(
     """
-    <h1 style='text-align: center;'>
+    <h1 style="
+        text-align:center;
+        margin-bottom:10px;
+    ">
         🌫️ پیش‌بینی هوشمند کیفیت هوای فردا
     </h1>
     """,
@@ -377,49 +423,70 @@ st.markdown(
 )
 
 
+st.markdown(
+    """
+    <p style="
+        text-align:center;
+        color:#999;
+        font-size:18px;
+        margin-bottom:30px;
+    ">
+        سامانه پیش‌بینی شاخص کیفیت هوا با استفاده از XGBoost
+    </p>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # =========================================================
-# جدول AQI
+# AQI RANGE TABLE
 # =========================================================
-st.markdown("### 📊 رنج‌های شاخص کیفیت هوا (AQI)")
+
+st.markdown(
+    "### 📊 رنج‌های شاخص کیفیت هوا (AQI)"
+)
+
 
 st.markdown(
     """
     <table style="
         width:100%;
         text-align:center;
-        background-color:#1e1e1e;
-        border-radius:10px;
+        border-collapse:collapse;
+        border-radius:12px;
+        overflow:hidden;
         color:white;
+        font-size:17px;
     ">
 
         <tr style="background-color:#333;">
-            <th>وضعیت</th>
-            <th>بازه AQI</th>
+            <th style="padding:12px;">وضعیت</th>
+            <th style="padding:12px;">بازه AQI</th>
         </tr>
 
-        <tr style="background-color:#00e400;">
-            <td>خوب</td>
-            <td>0–50</td>
+        <tr style="background-color:#00e400; color:black;">
+            <td style="padding:10px;">خوب</td>
+            <td style="padding:10px;">0 – 50</td>
         </tr>
 
-        <tr style="background-color:#ffff00; color:#000;">
-            <td>متوسط</td>
-            <td>51–100</td>
+        <tr style="background-color:#ffff00; color:black;">
+            <td style="padding:10px;">متوسط</td>
+            <td style="padding:10px;">51 – 100</td>
         </tr>
 
-        <tr style="background-color:#ff7e00;">
-            <td>ناسالم برای حساس‌ها</td>
-            <td>101–150</td>
+        <tr style="background-color:#ff7e00; color:white;">
+            <td style="padding:10px;">ناسالم برای حساس‌ها</td>
+            <td style="padding:10px;">101 – 150</td>
         </tr>
 
-        <tr style="background-color:#ff0000;">
-            <td>ناسالم</td>
-            <td>151–200</td>
+        <tr style="background-color:#ff0000; color:white;">
+            <td style="padding:10px;">ناسالم</td>
+            <td style="padding:10px;">151 – 200</td>
         </tr>
 
-        <tr style="background-color:#800080;">
-            <td>بسیار ناسالم</td>
-            <td>201–300</td>
+        <tr style="background-color:#800080; color:white;">
+            <td style="padding:10px;">بسیار ناسالم</td>
+            <td style="padding:10px;">201 – 300</td>
         </tr>
 
     </table>
@@ -432,9 +499,13 @@ st.markdown("---")
 
 
 # =========================================================
-# متغیرهای کیفیت هوا
+# AIR QUALITY INPUTS
 # =========================================================
-st.subheader("📊 متغیرهای کیفیت هوا (امروز)")
+
+st.subheader(
+    "📊 متغیرهای کیفیت هوا (امروز)"
+)
+
 
 cols1 = st.columns(8)
 
@@ -520,9 +591,13 @@ with cols1[7]:
 
 
 # =========================================================
-# AQI روزهای گذشته
+# PREVIOUS AQI
 # =========================================================
-st.subheader("📅 شاخص AQI روزهای گذشته")
+
+st.subheader(
+    "📅 شاخص AQI روزهای گذشته"
+)
+
 
 cols2 = st.columns(3)
 
@@ -561,23 +636,21 @@ st.markdown("---")
 
 
 # =========================================================
-# دکمه‌ها
+# BUTTONS
 # =========================================================
-col_btn1, col_btn2, col_btn3 = st.columns(3)
+
+col1, col2, col3 = st.columns(3)
 
 
-with col_btn1:
+with col1:
 
-    if st.button(
+    random_clicked = st.button(
         "🎲 انتخاب تصادفی از دیتاست",
         use_container_width=True
-    ):
-
-        st.session_state.random_trigger = True
-        st.rerun()
+    )
 
 
-with col_btn2:
+with col2:
 
     predict_clicked = st.button(
         "🚀 اجرای پیش‌بینی",
@@ -586,65 +659,105 @@ with col_btn2:
 
 
 # =========================================================
-# Prediction
+# RANDOM BUTTON
 # =========================================================
+
+if random_clicked:
+
+    random_data = random.choice(
+        HARDCODED_DATA
+    )
+
+    for key, value in random_data.items():
+
+        st.session_state[key] = value
+
+    st.rerun()
+
+
+# =========================================================
+# PREDICTION
+# =========================================================
+
 if predict_clicked:
+
+    features = compute_features(
+
+        pm2_5=st.session_state.pm2_5,
+
+        pm10=st.session_state.pm10,
+
+        co=st.session_state.co,
+
+        no2=st.session_state.no2,
+
+        so2=st.session_state.so2,
+
+        o3=st.session_state.o3,
+
+        dust=st.session_state.dust,
+
+        uv_index=st.session_state.uv_index,
+
+        aqi_today=st.session_state.aqi_today,
+
+        aqi_yesterday=st.session_state.aqi_yesterday,
+
+        aqi_2days_ago=st.session_state.aqi_2days_ago
+    )
+
 
     try:
 
-        # ---------------------------------------------
-        # ساخت featureها
-        # ---------------------------------------------
-        features = compute_features(
-            pm2_5=st.session_state.pm2_5,
-            pm10=st.session_state.pm10,
-            co=st.session_state.co,
-            no2=st.session_state.no2,
-            so2=st.session_state.so2,
-            o3=st.session_state.o3,
-            dust=st.session_state.dust,
-            uv_index=st.session_state.uv_index,
-            aqi_today=st.session_state.aqi_today,
-            aqi_yesterday=st.session_state.aqi_yesterday,
-            aqi_2days_ago=st.session_state.aqi_2days_ago
+        pred = make_prediction(
+            features
         )
-
-        # ---------------------------------------------
-        # prediction
-        # ---------------------------------------------
-        pred = make_prediction(features)
 
     except Exception as e:
 
-        st.error("❌ خطا هنگام اجرای مدل")
+        st.error(
+            "❌ خطا هنگام اجرای مدل"
+        )
 
         st.exception(e)
 
-        # اطلاعات کمکی برای تشخیص مشکل
-        with st.expander("🔍 اطلاعات فنی مدل"):
+        with st.expander(
+            "🔍 اطلاعات فنی مدل"
+        ):
 
             st.write(
-                "Featureهای مورد انتظار مدل:"
-            )
-
-            st.code(
-                "\n".join(MODEL_FEATURES)
+                "Featureهای مدل:"
             )
 
             st.write(
-                "Featureهای تولیدشده توسط برنامه:"
+                MODEL_FEATURES
             )
 
-            st.code(
-                "\n".join(features.keys())
+            st.write(
+                "Featureهای ورودی:"
             )
+
+            st.write(
+                list(features.keys())
+            )
+
+            if duplicate_features:
+
+                st.error(
+                    "Feature تکراری در مدل:"
+                )
+
+                st.write(
+                    duplicate_features
+                )
 
         st.stop()
 
 
     # =====================================================
-    # تعیین وضعیت AQI
+    # AQI STATUS
     # =====================================================
+
     if pred <= 50:
 
         status = "خوب"
@@ -665,7 +778,8 @@ if predict_clicked:
         status = "ناسالم برای حساس‌ها"
         color = "#ff7e00"
         msg = (
-            "گروه‌های حساس کمتر در فضای باز بمانند."
+            "گروه‌های حساس کمتر "
+            "در فضای باز بمانند."
         )
 
     elif pred <= 200:
@@ -673,8 +787,8 @@ if predict_clicked:
         status = "ناسالم"
         color = "#ff0000"
         msg = (
-            "خطر برای عموم، "
-            "فعالیت‌های سنگین را تعطیل کنید."
+            "هوا ناسالم است. "
+            "از فعالیت سنگین خودداری کنید."
         )
 
     else:
@@ -682,76 +796,31 @@ if predict_clicked:
         status = "بسیار ناسالم"
         color = "#800080"
         msg = (
-            "وضعیت بحرانی! "
-            "اکیداً در خانه بمانید."
+            "وضعیت نامطلوب است. "
+            "فعالیت در فضای باز را محدود کنید."
         )
 
 
     # =====================================================
-    # ذخیره تاریخچه
+    # GAUGE
     # =====================================================
-    new_record = pd.DataFrame([
-        {
-            'زمان': datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
 
-            'PM2.5': st.session_state.pm2_5,
-
-            'PM10': st.session_state.pm10,
-
-            'CO': st.session_state.co,
-
-            'NO2': st.session_state.no2,
-
-            'SO2': st.session_state.so2,
-
-            'O3': st.session_state.o3,
-
-            'Dust': st.session_state.dust,
-
-            'UV Index': st.session_state.uv_index,
-
-            'AQI امروز': st.session_state.aqi_today,
-
-            'AQI دیروز': st.session_state.aqi_yesterday,
-
-            'AQI دو روز پیش':
-                st.session_state.aqi_2days_ago,
-
-            'پیش‌بینی AQI':
-                round(pred, 2),
-
-            'وضعیت':
-                status
-        }
-    ])
-
-
-    st.session_state.history = pd.concat(
-        [
-            st.session_state.history,
-            new_record
-        ],
-        ignore_index=True
-    )
-
-
-    # =====================================================
-    # Gauge
-    # =====================================================
     fig = go.Figure(
+
         go.Indicator(
+
             mode="gauge+number",
+
             value=pred,
 
             number={
                 "font": {
-                    "size": 50
+                    "size": 42
                 }
             },
 
             gauge={
+
                 "axis": {
                     "range": [0, 300]
                 },
@@ -761,26 +830,32 @@ if predict_clicked:
                 },
 
                 "steps": [
+
                     {
                         "range": [0, 50],
                         "color": "#00e400"
                     },
+
                     {
                         "range": [50, 100],
                         "color": "#ffff00"
                     },
+
                     {
                         "range": [100, 150],
                         "color": "#ff7e00"
                     },
+
                     {
                         "range": [150, 200],
                         "color": "#ff0000"
                     },
+
                     {
                         "range": [200, 300],
                         "color": "#800080"
                     }
+
                 ]
             }
         )
@@ -794,8 +869,9 @@ if predict_clicked:
 
 
     # =====================================================
-    # وضعیت
+    # STATUS CARD
     # =====================================================
+
     text_color = (
         "black"
         if pred <= 100
@@ -803,75 +879,156 @@ if predict_clicked:
     )
 
 
+    status_html = f"""
+<div style="
+    background-color:{color};
+    padding:25px;
+    border-radius:15px;
+    color:{text_color};
+    text-align:center;
+    margin-top:15px;
+    margin-bottom:20px;
+">
+
+    <h2 style="
+        margin:0;
+        font-size:40px;
+        font-weight:bold;
+    ">
+        وضعیت: {status} — AQI: {pred:.1f}
+    </h2>
+
+    <p style="
+        font-size:26px;
+        font-weight:bold;
+        margin-top:15px;
+        margin-bottom:0;
+    ">
+        {msg}
+    </p>
+
+</div>
+"""
+
+
+    # مهم:
+    # اینجا HTML مستقیماً به markdown داده می‌شود
+    # و داخل ``` قرار نگرفته است.
     st.markdown(
-        f"""
-        <div style="
-            background-color:{color};
-            padding:20px;
-            border-radius:15px;
-            color:{text_color};
-            text-align:center;
-        ">
-
-            <h2 style="
-                margin:0;
-                font-size:40px;
-            ">
-                وضعیت: {status}
-                (AQI: {pred:.1f})
-            </h2>
-
-            <p style="
-                font-size:28px;
-                font-weight:bold;
-                margin-top:15px;
-            ">
-                {msg}
-            </p>
-
-        </div>
-        """,
+        status_html,
         unsafe_allow_html=True
     )
 
 
     # =====================================================
-    # توصیه
+    # ADVICE CARD
     # =====================================================
+
     advice = advice_map[status]
 
 
+    advice_html = f"""
+<div style="
+    margin-top:20px;
+    padding:18px;
+    border-left:6px solid #1f77b4;
+    border-radius:10px;
+    background-color:#f0f8ff;
+    text-align:center;
+">
+
+    <p style="
+        font-size:24px;
+        color:#333333;
+        font-weight:bold;
+        margin:0;
+    ">
+        💡 توصیه هوشمند: {advice}
+    </p>
+
+</div>
+"""
+
+
     st.markdown(
-        f"""
-        <div style="
-            margin-top:20px;
-            padding:15px;
-            border-left:5px solid #1f77b4;
-            background-color:#f0f8ff;
-            text-align:center;
-        ">
-
-            <p style="
-                font-size:24px;
-                color:#333;
-                font-weight:bold;
-            ">
-                💡 توصیه هوشمند:
-                {advice}
-            </p>
-
-        </div>
-        """,
+        advice_html,
         unsafe_allow_html=True
     )
 
 
+    # =====================================================
+    # SAVE HISTORY
+    # =====================================================
+
+    new_record = pd.DataFrame(
+        [
+            {
+                "زمان":
+                    datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+
+                "PM2.5":
+                    st.session_state.pm2_5,
+
+                "PM10":
+                    st.session_state.pm10,
+
+                "CO":
+                    st.session_state.co,
+
+                "NO2":
+                    st.session_state.no2,
+
+                "SO2":
+                    st.session_state.so2,
+
+                "O3":
+                    st.session_state.o3,
+
+                "Dust":
+                    st.session_state.dust,
+
+                "UV Index":
+                    st.session_state.uv_index,
+
+                "AQI امروز":
+                    st.session_state.aqi_today,
+
+                "AQI دیروز":
+                    st.session_state.aqi_yesterday,
+
+                "AQI دو روز پیش":
+                    st.session_state.aqi_2days_ago,
+
+                "پیش‌بینی AQI":
+                    round(pred, 2),
+
+                "وضعیت":
+                    status
+            }
+        ]
+    )
+
+
+    st.session_state.history = pd.concat(
+        [
+            st.session_state.history,
+            new_record
+        ],
+        ignore_index=True
+    )
+
+
 # =========================================================
-# تاریخچه پیش‌بینی‌ها
+# HISTORY
 # =========================================================
+
 st.markdown("---")
 
-st.subheader("📜 تاریخچه پیش‌بینی‌ها")
+st.subheader(
+    "📜 تاریخچه پیش‌بینی‌ها"
+)
 
 
 if not st.session_state.history.empty:
