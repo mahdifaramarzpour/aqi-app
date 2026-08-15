@@ -30,7 +30,7 @@ def load_model():
 try:
     model = load_model()
 except Exception as e:
-    st.error("❌ خطا در بارگذاری فایل مدل xgboost.pkl")
+    st.error("❌ خطا در بارگذاری فایل xgboost.pkl")
     st.exception(e)
     st.stop()
 
@@ -41,7 +41,7 @@ except Exception as e:
 
 if not hasattr(model, "feature_names_in_"):
     st.error(
-        "❌ مدل ذخیره‌شده فاقد feature_names_in_ است."
+        "❌ مدل ذخیره‌شده اطلاعات feature_names_in_ را ندارد."
     )
     st.stop()
 
@@ -49,16 +49,8 @@ if not hasattr(model, "feature_names_in_"):
 MODEL_FEATURES = list(model.feature_names_in_)
 
 
-# بررسی featureهای تکراری مدل
-duplicate_features = list(
-    pd.Series(MODEL_FEATURES)[
-        pd.Series(MODEL_FEATURES).duplicated()
-    ]
-)
-
-
 # =========================================================
-# HARD CODED DATA
+# HARD-CODED DATA
 # =========================================================
 
 HARDCODED_DATA = [
@@ -159,10 +151,7 @@ def compute_features(
 
     co_dot_no2 = co * no2
 
-    trend = (
-        aqi_today
-        - aqi_yesterday
-    )
+    trend = aqi_today - aqi_yesterday
 
     ma3 = (
         aqi_today
@@ -189,25 +178,14 @@ def compute_features(
 
 
 # =========================================================
-# PREDICTION FUNCTION
+# PREDICTION
 # =========================================================
 
 def make_prediction(features):
 
-    # -----------------------------
-    # Check duplicate model features
-    # -----------------------------
-
-    if duplicate_features:
-
-        raise ValueError(
-            "مدل دارای featureهای تکراری است: "
-            + str(duplicate_features)
-        )
-
-    # -----------------------------
-    # Check missing features
-    # -----------------------------
+    # -----------------------------------------------------
+    # بررسی featureهای گمشده
+    # -----------------------------------------------------
 
     missing_features = [
         feature
@@ -216,41 +194,57 @@ def make_prediction(features):
     ]
 
     if missing_features:
-
         raise ValueError(
-            "Featureهای زیر در ورودی وجود ندارند:\n"
+            "Featureهای زیر برای مدل وجود ندارند: "
             + str(missing_features)
         )
 
-    # -----------------------------
-    # Create input
-    # -----------------------------
+    # -----------------------------------------------------
+    # خیلی مهم:
+    #
+    # featureهای تکراری MODEL_FEATURES را حذف نمی‌کنیم.
+    #
+    # اگر مدل مثلاً این را داشته باشد:
+    #
+    # ['ozone', 'uv_index', 'ozone', 'uv_index']
+    #
+    # باید دقیقاً 4 مقدار به مدل بدهیم.
+    # -----------------------------------------------------
 
     input_values = [
         features[feature]
         for feature in MODEL_FEATURES
     ]
 
+    # -----------------------------------------------------
+    # تبدیل مستقیم به NumPy
+    #
+    # این کار باعث می‌شود sklearn/narwhals روی نام
+    # ستون‌های تکراری DataFrame خطا ندهد.
+    # -----------------------------------------------------
+
     X_input = np.asarray(
         [input_values],
         dtype=np.float64
     )
 
-    # -----------------------------
-    # Check shape
-    # -----------------------------
+    # -----------------------------------------------------
+    # کنترل تعداد featureها
+    # -----------------------------------------------------
 
-    if X_input.shape[1] != len(MODEL_FEATURES):
+    expected_count = len(MODEL_FEATURES)
 
+    actual_count = X_input.shape[1]
+
+    if actual_count != expected_count:
         raise ValueError(
-            f"تعداد featureهای ورودی "
-            f"{X_input.shape[1]} است، "
-            f"اما مدل {len(MODEL_FEATURES)} feature انتظار دارد."
+            f"تعداد featureهای ورودی {actual_count} است "
+            f"اما مدل {expected_count} feature انتظار دارد."
         )
 
-    # -----------------------------
+    # -----------------------------------------------------
     # Prediction
-    # -----------------------------
+    # -----------------------------------------------------
 
     prediction = model.predict(X_input)
 
@@ -258,11 +252,10 @@ def make_prediction(features):
 
 
 # =========================================================
-# AQI ADVICE
+# ADVICE
 # =========================================================
 
 advice_map = {
-
     "خوب":
         "هوای عالی برای پیاده‌روی! از فضای باز لذت ببرید. 🏃‍♂️",
 
@@ -276,7 +269,7 @@ advice_map = {
         "هوا ناسالم است! از تردد غیرضروری و فعالیت سنگین خودداری کنید. 🛑",
 
     "بسیار ناسالم":
-        "وضعیت بحرانی است! فعالیت در فضای باز را محدود کنید. ⛔"
+        "وضعیت نامطلوب است. فعالیت در فضای باز را محدود کنید. ⛔"
 }
 
 
@@ -285,7 +278,6 @@ advice_map = {
 # =========================================================
 
 defaults = {
-
     "pm2_5": 20.0,
     "pm10": 30.0,
     "co": 300.0,
@@ -294,7 +286,6 @@ defaults = {
     "o3": 50.0,
     "dust": 5.0,
     "uv_index": 1.5,
-
     "aqi_today": 50.0,
     "aqi_yesterday": 48.0,
     "aqi_2days_ago": 45.0
@@ -304,7 +295,6 @@ defaults = {
 for key, value in defaults.items():
 
     if key not in st.session_state:
-
         st.session_state[key] = value
 
 
@@ -335,11 +325,10 @@ if "history" not in st.session_state:
 
 
 # =========================================================
-# MODAL
+# ABOUT
 # =========================================================
 
 if "show_modal" not in st.session_state:
-
     st.session_state.show_modal = True
 
 
@@ -380,30 +369,7 @@ if st.session_state.show_modal:
         ):
 
             st.session_state.show_modal = False
-
             st.rerun()
-
-
-# =========================================================
-# RANDOM DATA
-# =========================================================
-
-if "random_trigger" not in st.session_state:
-
-    st.session_state.random_trigger = False
-
-
-if st.session_state.random_trigger:
-
-    random_data = random.choice(
-        HARDCODED_DATA
-    )
-
-    for key, value in random_data.items():
-
-        st.session_state[key] = value
-
-    st.session_state.random_trigger = False
 
 
 # =========================================================
@@ -414,7 +380,7 @@ st.markdown(
     """
     <h1 style="
         text-align:center;
-        margin-bottom:10px;
+        margin-bottom:5px;
     ">
         🌫️ پیش‌بینی هوشمند کیفیت هوای فردا
     </h1>
@@ -422,30 +388,28 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 st.markdown(
     """
-    <p style="
+    <div style="
         text-align:center;
-        color:#999;
-        font-size:18px;
-        margin-bottom:30px;
+        color:#999999;
+        font-size:17px;
+        margin-bottom:25px;
     ">
         سامانه پیش‌بینی شاخص کیفیت هوا با استفاده از XGBoost
-    </p>
+    </div>
     """,
     unsafe_allow_html=True
 )
 
 
 # =========================================================
-# AQI RANGE TABLE
+# AQI TABLE
 # =========================================================
 
 st.markdown(
     "### 📊 رنج‌های شاخص کیفیت هوا (AQI)"
 )
-
 
 st.markdown(
     """
@@ -453,40 +417,87 @@ st.markdown(
         width:100%;
         text-align:center;
         border-collapse:collapse;
-        border-radius:12px;
         overflow:hidden;
-        color:white;
+        border-radius:12px;
         font-size:17px;
     ">
 
-        <tr style="background-color:#333;">
-            <th style="padding:12px;">وضعیت</th>
-            <th style="padding:12px;">بازه AQI</th>
+        <tr style="
+            background-color:#333333;
+            color:white;
+        ">
+            <th style="padding:12px;">
+                وضعیت
+            </th>
+
+            <th style="padding:12px;">
+                بازه AQI
+            </th>
         </tr>
 
-        <tr style="background-color:#00e400; color:black;">
-            <td style="padding:10px;">خوب</td>
-            <td style="padding:10px;">0 – 50</td>
+        <tr style="
+            background-color:#00e400;
+            color:black;
+        ">
+            <td style="padding:10px;">
+                خوب
+            </td>
+
+            <td style="padding:10px;">
+                0 – 50
+            </td>
         </tr>
 
-        <tr style="background-color:#ffff00; color:black;">
-            <td style="padding:10px;">متوسط</td>
-            <td style="padding:10px;">51 – 100</td>
+        <tr style="
+            background-color:#ffff00;
+            color:black;
+        ">
+            <td style="padding:10px;">
+                متوسط
+            </td>
+
+            <td style="padding:10px;">
+                51 – 100
+            </td>
         </tr>
 
-        <tr style="background-color:#ff7e00; color:white;">
-            <td style="padding:10px;">ناسالم برای حساس‌ها</td>
-            <td style="padding:10px;">101 – 150</td>
+        <tr style="
+            background-color:#ff7e00;
+            color:white;
+        ">
+            <td style="padding:10px;">
+                ناسالم برای حساس‌ها
+            </td>
+
+            <td style="padding:10px;">
+                101 – 150
+            </td>
         </tr>
 
-        <tr style="background-color:#ff0000; color:white;">
-            <td style="padding:10px;">ناسالم</td>
-            <td style="padding:10px;">151 – 200</td>
+        <tr style="
+            background-color:#ff0000;
+            color:white;
+        ">
+            <td style="padding:10px;">
+                ناسالم
+            </td>
+
+            <td style="padding:10px;">
+                151 – 200
+            </td>
         </tr>
 
-        <tr style="background-color:#800080; color:white;">
-            <td style="padding:10px;">بسیار ناسالم</td>
-            <td style="padding:10px;">201 – 300</td>
+        <tr style="
+            background-color:#800080;
+            color:white;
+        ">
+            <td style="padding:10px;">
+                بسیار ناسالم
+            </td>
+
+            <td style="padding:10px;">
+                201 – 300
+            </td>
         </tr>
 
     </table>
@@ -505,7 +516,6 @@ st.markdown("---")
 st.subheader(
     "📊 متغیرهای کیفیت هوا (امروز)"
 )
-
 
 cols1 = st.columns(8)
 
@@ -598,7 +608,6 @@ st.subheader(
     "📅 شاخص AQI روزهای گذشته"
 )
 
-
 cols2 = st.columns(3)
 
 
@@ -639,10 +648,10 @@ st.markdown("---")
 # BUTTONS
 # =========================================================
 
-col1, col2, col3 = st.columns(3)
+col_btn1, col_btn2, col_btn3 = st.columns(3)
 
 
-with col1:
+with col_btn1:
 
     random_clicked = st.button(
         "🎲 انتخاب تصادفی از دیتاست",
@@ -650,7 +659,7 @@ with col1:
     )
 
 
-with col2:
+with col_btn2:
 
     predict_clicked = st.button(
         "🚀 اجرای پیش‌بینی",
@@ -659,7 +668,7 @@ with col2:
 
 
 # =========================================================
-# RANDOM BUTTON
+# RANDOM DATA
 # =========================================================
 
 if random_clicked:
@@ -681,31 +690,27 @@ if random_clicked:
 
 if predict_clicked:
 
+    # -----------------------------------------------------
+    # Compute features
+    # -----------------------------------------------------
+
     features = compute_features(
-
         pm2_5=st.session_state.pm2_5,
-
         pm10=st.session_state.pm10,
-
         co=st.session_state.co,
-
         no2=st.session_state.no2,
-
         so2=st.session_state.so2,
-
         o3=st.session_state.o3,
-
         dust=st.session_state.dust,
-
         uv_index=st.session_state.uv_index,
-
         aqi_today=st.session_state.aqi_today,
-
         aqi_yesterday=st.session_state.aqi_yesterday,
-
         aqi_2days_ago=st.session_state.aqi_2days_ago
     )
 
+    # -----------------------------------------------------
+    # Prediction
+    # -----------------------------------------------------
 
     try:
 
@@ -726,7 +731,12 @@ if predict_clicked:
         ):
 
             st.write(
-                "Featureهای مدل:"
+                "تعداد featureهای مدل:",
+                len(MODEL_FEATURES)
+            )
+
+            st.write(
+                "Featureهای مدل به ترتیب:"
             )
 
             st.write(
@@ -734,29 +744,24 @@ if predict_clicked:
             )
 
             st.write(
-                "Featureهای ورودی:"
+                "تعداد featureهای تولیدشده:",
+                len(features)
+            )
+
+            st.write(
+                "Featureهای تولیدشده:"
             )
 
             st.write(
                 list(features.keys())
             )
 
-            if duplicate_features:
-
-                st.error(
-                    "Feature تکراری در مدل:"
-                )
-
-                st.write(
-                    duplicate_features
-                )
-
         st.stop()
 
 
-    # =====================================================
-    # AQI STATUS
-    # =====================================================
+    # -----------------------------------------------------
+    # AQI status
+    # -----------------------------------------------------
 
     if pred <= 50:
 
@@ -806,21 +811,17 @@ if predict_clicked:
     # =====================================================
 
     fig = go.Figure(
-
         go.Indicator(
-
             mode="gauge+number",
-
             value=pred,
 
             number={
                 "font": {
-                    "size": 42
+                    "size": 45
                 }
             },
 
             gauge={
-
                 "axis": {
                     "range": [0, 300]
                 },
@@ -855,12 +856,10 @@ if predict_clicked:
                         "range": [200, 300],
                         "color": "#800080"
                     }
-
                 ]
             }
         )
     )
-
 
     st.plotly_chart(
         fig,
@@ -877,7 +876,6 @@ if predict_clicked:
         if pred <= 100
         else "white"
     )
-
 
     status_html = f"""
 <div style="
@@ -910,10 +908,6 @@ if predict_clicked:
 </div>
 """
 
-
-    # مهم:
-    # اینجا HTML مستقیماً به markdown داده می‌شود
-    # و داخل ``` قرار نگرفته است.
     st.markdown(
         status_html,
         unsafe_allow_html=True
@@ -921,11 +915,10 @@ if predict_clicked:
 
 
     # =====================================================
-    # ADVICE CARD
+    # ADVICE
     # =====================================================
 
     advice = advice_map[status]
-
 
     advice_html = f"""
 <div style="
@@ -948,7 +941,6 @@ if predict_clicked:
 
 </div>
 """
-
 
     st.markdown(
         advice_html,
